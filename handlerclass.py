@@ -1,10 +1,9 @@
-import cv2
-import torch
-import pyttsx3
-import time
+from Object_Detection.basic_draft import *
+from image_to_text.demo import *
 
-class ObjectDetectionAndSpeech:
-    def __init__(self, label_map, timegap=15):
+
+class Handler:
+    def __init__(self, label_map, caption_model_name, timegap=15,max_length = 16, num_beams = 4):
         #tts setting 
         self.engine = pyttsx3.init()
         self.engine.setProperty('rate', 200)  # 음성 속도 조절, 수정 가능;
@@ -22,7 +21,10 @@ class ObjectDetectionAndSpeech:
         #인식할 객체 
         self.label_map = label_map
         
-
+        #image to txt
+        self.caption_model = ImageCaptioningModel(caption_model_name, max_length, num_beams)
+        self.file_path = './image_to_text/img/cat.jpg'
+        
     #detection 된 객체 리스트를 바탕으로 텍스트 생성;
     def generate_sentence(self, lst):
         label_counts = {}
@@ -48,6 +50,8 @@ class ObjectDetectionAndSpeech:
         return ''.join(result)
 
     def run(self):
+        print(self.caption_model.predict([self.file_path]))
+
         while True:
             ret, frame = self.cap.read()
             results = self.model(frame)
@@ -73,7 +77,16 @@ class ObjectDetectionAndSpeech:
             if int(time.time())  % self.timegap == 0:
                 print(self.generate_sentence(current_detection))
                 ##이후 tts로 바꾸어야 할 부분, 
-                
+            
+            #from image path
+            if cv2.waitKey(1) & 0xFF == ord('a'):
+                print(self.caption_model.predict([self.file_path]))
+            
+            #from cv2capture
+            if cv2.waitKey(1) & 0xFF == ord('s'):
+                print(self.caption_model.predict_from_frame(frame))                
+
+            #종료
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
@@ -90,5 +103,7 @@ class ObjectDetectionAndSpeech:
 #         "traffic light" : "신호등",
 #         "clock" : "시계"
 #     }
-#     obj_detector = ObjectDetectionAndSpeech(label_map)
-#     obj_detector.run()
+#     model_name = "nlpconnect/vit-gpt2-image-captioning"
+
+#     handler = Handler(label_map, model_name )
+#     handler.run()
