@@ -6,7 +6,7 @@ class Handler:
     def __init__(self, label_map, caption_model_name, timegap=15,max_length = 16, num_beams = 4):
         #tts setting 
         self.engine = pyttsx3.init()
-        self.engine.setProperty('rate', 200)  # 음성 속도 조절, 수정 가능;
+        self.engine.setProperty('rate', 300)  # 음성 속도 조절, 수정 가능;
         
         #model set
         self.model = torch.hub.load("ultralytics/yolov5", "yolov5s")
@@ -75,7 +75,9 @@ class Handler:
             
             #출력 condition
             if int(time.time())  % self.timegap == 0:
-                print(self.generate_sentence(current_detection))
+                #print(self.generate_sentence(current_detection))
+                self.engine.say(self.generate_sentence(current_detection))
+                self.engine.runAndWait()
                 ##이후 tts로 바꾸어야 할 부분, 
             
             #from image path
@@ -84,7 +86,10 @@ class Handler:
             
             #from cv2capture
             if cv2.waitKey(1) & 0xFF == ord('s'):
-                print(self.caption_model.predict_from_frame(frame))                
+                #print(self.caption_model.predict_from_frame(frame))                
+                self.engine.say(self.caption_model.predict_from_frame(frame))
+                self.engine.runAndWait()
+
 
             #종료
             if cv2.waitKey(1) & 0xFF == ord('q'):
