@@ -1,7 +1,7 @@
 from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
 import torch
 from PIL import Image
-
+from googletrans import Translator
 
 #클래스 내 함수 :
 #predict :  원래 image_path 기준으로 이미지묘사하는 기존 코드 
@@ -18,6 +18,12 @@ class ImageCaptioningModel:
         self.max_length = max_length
         self.num_beams = num_beams
         self.gen_kwargs = {"max_length": self.max_length, "num_beams": self.num_beams}
+        
+        
+    def translate_english_to_korean(self, english_text):
+        translator = Translator()
+        translated_text = translator.translate(english_text, src='en', dest='ko')
+        return translated_text.text
 
     # predict from image_path.
     def predict(self, image_paths):
@@ -35,7 +41,8 @@ class ImageCaptioningModel:
 
         preds = self.tokenizer.batch_decode(output_ids, skip_special_tokens=True)
         preds = [pred.strip() for pred in preds]
-        return preds
+        results = self.translate_english_to_korean(preds[0])
+        return results
     
     def preprocess_frame(self, frame):
         # Convert frame to PIL Image
@@ -57,11 +64,12 @@ class ImageCaptioningModel:
 
         preds = self.tokenizer.batch_decode(output_ids, skip_special_tokens=True)
         preds = [pred.strip() for pred in preds]
-        return preds
+        results = self.translate_english_to_korean(preds[0])
+        return results
 
 # if __name__ == "__main__":
 #     model_name = "nlpconnect/vit-gpt2-image-captioning"
 #     captioning_model = ImageCaptioningModel(model_name)
-#     file_path = './image_to_text/img/test.jpg'
+#     file_path = './image_to_text/img/cat.jpg'
 #     predictions = captioning_model.predict([file_path])
 #     print(predictions)
