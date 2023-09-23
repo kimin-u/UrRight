@@ -35,6 +35,8 @@ class DistanceDetection:
             img_width = self.distance_label_map[obj][1]
             img_path = "my_image/"+obj+".jpg"
             ref_image = cv2.imread(img_path)
+            ref_image = cv2.resize(ref_image, (640, 480))
+
             ref_image_obj_width = self.obj_width_finder(ref_image)  #frame 너비
             Focal_length = self.FocalLength(img_distance,img_width,ref_image_obj_width)
             self.distance_label_map[obj].extend([ref_image_obj_width,Focal_length])
@@ -44,6 +46,7 @@ class DistanceDetection:
         while True:
             _, frame = self.cap.read()
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
             results = self.model(frame_rgb)
             class_labels = results.names
 
@@ -84,12 +87,10 @@ if __name__ == "__main__":
     # 수정가능; 인식하고자 하는 객체. 
     distance_label_map = {
         "cell phone" : [30,16],
-        # "bicycle": [200,60],
+        "bicycle": [100,50],
         "car": [300,180],
-        # "traffic light": [200,60],
-        # "truck": [300,250],
-        # "fire hydrant" : [200,60],
-        # "stop sign" : [200,60]
+        "truck": [250,250],
+        "fire hydrant" : [150,60]
     }
     obj_detector = DistanceDetection(distance_label_map)
     obj_detector.run()
