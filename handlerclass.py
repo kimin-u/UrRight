@@ -1,9 +1,10 @@
-from Object_Detection.basic_draft import *
+from basic_draft import *
 from image_to_text.demo import *
+from distance import *
 
 
 class Handler:
-    def __init__(self, label_map, caption_model_name, timegap=15,max_length = 16, num_beams = 4):
+    def __init__(self, label_map,distance_label_map, caption_model_name, timegap=15,max_length = 16, num_beams = 4):
         #tts setting 
         self.engine = pyttsx3.init()
         self.engine.setProperty('rate', 300)  # 음성 속도 조절, 수정 가능;
@@ -24,6 +25,8 @@ class Handler:
         #image to txt
         self.caption_model = ImageCaptioningModel(caption_model_name, max_length, num_beams)
         self.file_path = './image_to_text/img/cat.jpg'
+
+        self.distance_label_map = distance_label_map
         
     #detection 된 객체 리스트를 바탕으로 텍스트 생성;
     def generate_sentence(self, lst):
@@ -49,27 +52,83 @@ class Handler:
 
         return ''.join(result)
 
-    def run(self):
-        print(self.caption_model.predict([self.file_path]))
+    def FocalLength(self,img_distance, img_width, ref_image_obj_width):
+        focal_length = (ref_image_obj_width * img_distance)/ img_width
+        return focal_length
 
+    def Distance_finder (self,Focal_length, real_face_width, width_in_frame):
+        distance = (real_face_width * Focal_length)/width_in_frame
+        return distance
+
+    def obj_width_finder(self,image):
+        obj_width = 0
+        results = self.model(image)
+        
+        for detection in results.xyxy[0]:
+            x_min, y_min, x_max, y_max = map(int, detection[:4])
+            obj_width = x_max-x_min
+        return obj_width
+
+    def example_distance(self):
+        for obj in self.distance_label_map.keys():
+            img_distance = self.distance_label_map[obj][0]
+            img_width = self.distance_label_map[obj][1]
+            img_path = 'Distance_Measure/my_image/'+obj+'.jpg'
+            ref_image = cv2.imread(img_path)
+            ref_image = cv2.resize(ref_image, (640, 480))
+
+            ref_image_obj_width = self.obj_width_finder(ref_image)  #frame 너비
+            Focal_length = self.FocalLength(img_distance,img_width,ref_image_obj_width)
+            self.distance_label_map[obj].extend([ref_image_obj_width,Focal_length])
+
+    def run(self):
+        #print(self.caption_model.predict([self.file_path]))
+        self.example_distance()
+    
         while True:
             ret, frame = self.cap.read()
             results = self.model(frame)
             current_detection = list()
+
+            class_labels = results.names #distance에서 사용
 
             for detection in results.xyxy[0]:
                 class_id = int(detection[5])
                 class_label = self.model.names[class_id]
                 if class_label in self.label_map:
                     current_detection.append(self.label_map[class_label])
+                
+                
+##############
+                width_in_frame = 0
+                x_min, y_min, x_max, y_max = map(int, detection[:4])
+                width_in_frame = x_max-x_min
+                class_index = int(detection[5])
+                class_name = class_labels[class_index]
 
+                if class_name in self.distance_label_map.keys():
+                    distance = self.distance_label_map[class_name][0]
+                    width = self.distance_label_map[class_name][1]
+                    ref_imge_obj_width = self.distance_label_map[class_name][2]
+                    Focal_length = self.distance_label_map[class_name][3]
+
+                    real_width = (width_in_frame/ref_imge_obj_width)*width 
+
+                    if width_in_frame != 0 :
+                        Distance = self.Distance_finder(Focal_length,width,width_in_frame)
+                        if Distance <=150 :
+                            print("전방에"+class_name+"이있습니다.")
+
+            #############
+            
+            
+            
             frame = results.render()[0]
             cv2.imshow("Frame", frame)
             
             
             #for debug
             results.print()
-            #
                         
             current_detection = sorted(current_detection)
             
@@ -98,17 +157,25 @@ class Handler:
         self.cap.release()
         cv2.destroyAllWindows()
 
-# if __name__ == "__main__":
-#     # 수정가능; 인식하고자 하는 객체. 
-#     label_map = {
-#         "person": "사람",
-#         "chair": "의자",
-#         "cell phone": "휴대폰",
-#         "truck": "트럭",
-#         "traffic light" : "신호등",
-#         "clock" : "시계"
-#     }
-#     model_name = "nlpconnect/vit-gpt2-image-captioning"
+if __name__ == "__main__":
+    # 수정가능; 인식하고자 하는 객체. 
+    label_map = {
+        "person": "사람",
+        "chair": "의자",
+        "cell phone": "휴대폰",
+        "truck": "트럭",
+        "traffic light" : "신호등",
+        "clock" : "시계"
+    }
+    distance_label_map = {
+        "cell phone" : [35,16],
+        "bicycle": [100,50],
+        "car": [300,180],
+        "truck": [250,250],
+        "fire hydrant" : [150,60]
+    }
 
-#     handler = Handler(label_map, model_name )
-#     handler.run()
+    model_name = "nlpconnect/vit-gpt2-image-captioning"
+
+    handler = Handler(label_map, distance_label_map,model_name )
+    handler.run()
