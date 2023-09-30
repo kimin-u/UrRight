@@ -1,10 +1,10 @@
-from basic_draft import *
+from Object_Detection.basic_draft import *
 from image_to_text.demo import *
-from distance import *
-
+from Distance_Measure.distance import *
+import winsound
 
 class Handler:
-    def __init__(self, label_map,distance_label_map, caption_model_name, timegap=15,max_length = 16, num_beams = 4):
+    def __init__(self, label_map,distance_label_map, caption_model_name, timegap=15, beepsoundgap = 10, max_length = 16, num_beams = 4):
         #tts setting 
         self.engine = pyttsx3.init()
         self.engine.setProperty('rate', 300)  # 음성 속도 조절, 수정 가능;
@@ -27,6 +27,8 @@ class Handler:
         self.file_path = './image_to_text/img/cat.jpg'
 
         self.distance_label_map = distance_label_map
+        
+        self.beepsoundgap = beepsoundgap
         
     #detection 된 객체 리스트를 바탕으로 텍스트 생성;
     def generate_sentence(self, lst):
@@ -84,13 +86,15 @@ class Handler:
     def run(self):
         #print(self.caption_model.predict([self.file_path]))
         self.example_distance()
-    
         while True:
             ret, frame = self.cap.read()
             results = self.model(frame)
             current_detection = list()
 
             class_labels = results.names #distance에서 사용
+            
+            if int(time.time())  % self.beepsoundgap == 0:
+                beepsound = True
 
             for detection in results.xyxy[0]:
                 class_id = int(detection[5])
@@ -116,8 +120,10 @@ class Handler:
 
                     if width_in_frame != 0 :
                         Distance = self.Distance_finder(Focal_length,width,width_in_frame)
-                        if Distance <=150 :
+                        if (Distance <=150) and (beepsound == True) :
                             print("전방에"+class_name+"이있습니다.")
+                            winsound.Beep(440,1000)           # hz,  지속시간,  경고음 . .
+                            beepsound = False
 
             #############
             
@@ -134,10 +140,10 @@ class Handler:
             
             #출력 condition
             if int(time.time())  % self.timegap == 0:
-                #print(self.generate_sentence(current_detection))
+                ##이후 tts로 바꾸어야 할 부분, 
+                print(self.generate_sentence(current_detection))
                 self.engine.say(self.generate_sentence(current_detection))
                 self.engine.runAndWait()
-                ##이후 tts로 바꾸어야 할 부분, 
             
             #from image path
             if cv2.waitKey(1) & 0xFF == ord('a'):
