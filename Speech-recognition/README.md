@@ -27,10 +27,10 @@
 
 ### 실행 데모
 ```
-python test.py
+C:~/Speech-recognition/demo python test.py
 ```
 
-아나운서 날씨 예보 MP3 파일을 사용 [demo/test_audio.mp3]
+아나운서 날씨 예보 MP3 파일을 사용 [demo/audio.mp3]
 - [날씨] 전국 차츰 비‥해안, 시간당 30~50mm↑ (2023.09.20/뉴스투데이/MBC)[[유튜브 원본 링크]](https://www.youtube.com/watch?v=fv5zt2mdFXM&t=2s&ab_channel=MBCNEWS)
 #### 결과
 <img src="demo/result.png" width="700" height="250"/>
