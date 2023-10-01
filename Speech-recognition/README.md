@@ -10,6 +10,11 @@
 ### 실행전 설치
 
 - [PyTorch](https://pytorch.org/) 1.10.1
+- python 3.8 - 3.11
+- The latest release of Whisper
+  - ```pip install -U openai-whisper```
+  - ```pip install git+https://github.com/openai/whisper.git```
+  - ```pip install --upgrade --no-deps --force-reinstall git+https://github.com/openai/whisper.git```
 ##### NVIDIA
 - CUDA11  
   - 각자 운영체제에 맞는거 설치 [[링크]](https://developer.nvidia.com/cuda-11.0-download-archive)
