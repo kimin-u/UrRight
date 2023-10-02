@@ -1,7 +1,10 @@
 from Object_Detection.basic_draft import *
 from image_to_text.demo import *
 from Distance_Measure.distance import *
+from Text_Searching.search import *
 import winsound
+
+from Speech-recognition.demo.test import *
 
 class Handler:
     def __init__(self, label_map,distance_label_map, caption_model_name, timegap=15, beepsoundgap = 10, max_length = 16, num_beams = 4):
@@ -24,12 +27,19 @@ class Handler:
         
         #image to txt
         self.caption_model = ImageCaptioningModel(caption_model_name, max_length, num_beams)
-        self.file_path = './image_to_text/img/cat.jpg'
+        # self.file_path = './image_to_text/img/cat.jpg'
 
         self.distance_label_map = distance_label_map
         
         self.beepsoundgap = beepsoundgap
         
+        #stt.
+        self.transcriber = WhisperTranscriber()
+        #text_searching 
+        self.searchtext = Trie()
+        self.img_description_bool = False
+        self.obj_detection_bool = False
+
     #detection 된 객체 리스트를 바탕으로 텍스트 생성;
     def generate_sentence(self, lst):
         label_counts = {}
@@ -138,23 +148,44 @@ class Handler:
                         
             current_detection = sorted(current_detection)
             
+            result_text = ""
+            if cv2.waitKey(1) & 0xFF == ord('a'):
+                audio = self.transcriber.record_audio()
+                self.transcriber.save_audio(audio)
+
+                result_text = self.transcriber.transcribe_audio()
+                print(result_text)
+            
+            if (result_text != ""):
+                word_list = result_text.split()
+                for word in word_list:
+                    self.searchtext.insert(word)
+                self.img_description_bool =(self.searchtext.search("풍경") or self.searchtext.search("묘사"))
+                self.obj_detection_bool = (self.searchtext.search("객체") or self.searchtext.search("인식"))
+                print(self.img_description_bool, self.obj_detection_bool)
+            
+            result_text = "" 
+            
             #출력 condition
-            if int(time.time())  % self.timegap == 0:
-                ##이후 tts로 바꾸어야 할 부분, 
+            if (int(time.time())  % self.timegap == 0) or (self.obj_detection_bool == True):
+                #
+                print("객체인식ㄱ")
                 print(self.generate_sentence(current_detection))
                 self.engine.say(self.generate_sentence(current_detection))
                 self.engine.runAndWait()
             
-            #from image path
-            if cv2.waitKey(1) & 0xFF == ord('a'):
-                print(self.caption_model.predict([self.file_path]))
+            
             
             #from cv2capture
-            if cv2.waitKey(1) & 0xFF == ord('s'):
-                #print(self.caption_model.predict_from_frame(frame))                
+            if (cv2.waitKey(1) & 0xFF == ord('s')) or (self.img_description_bool == True):
+                #
+                print("풍경묘사====")
+                print(self.caption_model.predict_from_frame(frame))                
                 self.engine.say(self.caption_model.predict_from_frame(frame))
                 self.engine.runAndWait()
-
+            
+            self.obj_detection_bool = False
+            self.img_description_bool = False
 
             #종료
             if cv2.waitKey(1) & 0xFF == ord('q'):
