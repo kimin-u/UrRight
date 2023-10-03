@@ -4,7 +4,9 @@ from Distance_Measure.distance import *
 from Text_Searching.search import *
 import winsound
 
-from speech_recog import * ###
+from speech_recog import * 
+
+###
 class Handler:
     def __init__(self, label_map,distance_label_map, caption_model_name, timegap=15, beepsoundgap = 10, max_length = 16, num_beams = 4):
         #tts setting 
