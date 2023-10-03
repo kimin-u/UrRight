@@ -7,6 +7,9 @@ class Trie:
     def __init__(self):
         self.head = Node(None)
 
+    def clear(self):
+        self.head = Node(None)
+    
     def insert(self, string):
         current_node = self.head
 
