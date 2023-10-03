@@ -5,6 +5,7 @@ from Text_Searching.search import *
 import winsound
 
 from speech_recog import * 
+#from Speech_recognition.demo.test import *
 
 ###
 class Handler:
