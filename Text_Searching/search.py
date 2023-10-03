@@ -6,7 +6,10 @@ class Node(object):
 class Trie:
     def __init__(self):
         self.head = Node(None)
-
+        
+    def clear(self):
+        self.head = Node(None)
+    
     def insert(self, string):
         current_node = self.head
 
@@ -26,7 +29,7 @@ class Trie:
                 return False
         return True
     
-#if __name__ == "__main__":
+# if __name__ == "__main__":
 #    input_text_list = ["풍경 묘사", "풍경 묘사 해줘", "풍경 묘사 좀 부탁해", "객체인식 좀 해줘"]
 #    for input_text in input_text_list:
 #        word_list = input_text.split()
