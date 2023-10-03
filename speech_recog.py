@@ -11,9 +11,9 @@ class WhisperTranscriber:
 
     def record_audio(self):
         with self.microphone as source:
-            print("마이크 시작")
+            print("음성인식 : ")
             audio = self.recognizer.listen(source, timeout= self.timeout)
-            print("끝")
+            print(" - - - ")
             return audio
 
     def save_audio(self, audio, filename="audio.wav"):

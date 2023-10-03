@@ -10,16 +10,16 @@ from speech_recog import *
 
 ###
 class Handler:
-    def __init__(self, label_map,distance_label_map, caption_model_name, timegap=15, beepsoundgap = 10, max_length = 16, num_beams = 4):
+    def __init__(self, label_map,distance_label_map, caption_model_name, timegap=15, beepsoundgap = 3, max_length = 16, num_beams = 4):
         #tts setting 
         self.engine = pyttsx3.init()
-        self.engine.setProperty('rate', 300)  # 음성 속도 조절, 수정 가능;
+        self.engine.setProperty('rate', 250)  # 음성 속도 조절, 수정 가능;
         
         #model set
         self.model = torch.hub.load("ultralytics/yolov5", "yolov5s")
         
         #cv2 capture
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(1)
         self.cap.set(cv2.CAP_PROP_FPS, 30)  # 30frame/s  : 수정 가능; 
         
         #t초마다,, 
@@ -134,7 +134,7 @@ class Handler:
                     if width_in_frame != 0 :
                         Distance = self.Distance_finder(Focal_length,width,width_in_frame)
                         if (Distance <=150) and (beepsound == True) :
-                            print("전방에"+class_name+"이있습니다.")
+                            #print("전방에"+class_name+"이있습니다.")
                             winsound.Beep(440,1000)           # hz,  지속시간,  경고음 . .
                             beepsound = False
 
@@ -147,7 +147,7 @@ class Handler:
             
             
             #for debug
-            results.print()
+           # results.print()
                         
             current_detection = sorted(current_detection)
             
@@ -164,16 +164,16 @@ class Handler:
                 for word in word_list:
                     self.searchtext.insert(word)
                 self.img_description_bool =(self.searchtext.search("풍경") or self.searchtext.search("묘사"))
-                self.obj_detection_bool = (self.searchtext.search("객체") or self.searchtext.search("인식"))
-                print(self.img_description_bool, self.obj_detection_bool)
+                self.obj_detection_bool = (self.searchtext.search("객체") or self.searchtext.search("인식") or self.searchtext.search("앞에"))
+                #print(self.img_description_bool, self.obj_detection_bool)
                 result_text = "" 
                 self.searchtext.clear()
             
             
             #출력 condition
-            if (int(time.time())  % self.timegap == 0) or (self.obj_detection_bool == True):
-                #
-                print("객체인식ㄱ")
+            #if (int(time.time())  % self.timegap == 0) or (self.obj_detection_bool == True):
+            if cv2.waitKey(1) & 0xFF == ord('f') or (self.obj_detection_bool == True) : 
+                print("Object detection")
                 print(self.generate_sentence(current_detection))
                 self.engine.say(self.generate_sentence(current_detection))
                 self.engine.runAndWait()
@@ -183,7 +183,7 @@ class Handler:
             #from cv2capture
             if (cv2.waitKey(1) & 0xFF == ord('s')) or (self.img_description_bool == True):
                 #
-                print("풍경묘사====")
+                print("Landscape description")
                 print(self.caption_model.predict_from_frame(frame))                
                 self.engine.say(self.caption_model.predict_from_frame(frame))
                 self.engine.runAndWait()
@@ -202,18 +202,18 @@ if __name__ == "__main__":
     # 수정가능; 인식하고자 하는 객체. 
     label_map = {
         "person": "사람",
-        "chair": "의자",
-        "cell phone": "휴대폰",
+        "car" : "차",
         "truck": "트럭",
-        "traffic light" : "신호등",
-        "clock" : "시계"
+        "bicycle" : "자전거",        
     }
+    
     distance_label_map = {
-        "cell phone" : [35,16],
+       # "cell phone" : [35,16],
         "bicycle": [100,50],
         "car": [300,180],
         "truck": [250,250],
-        "fire hydrant" : [150,60]
+        "fire hydrant" : [150,60],
+        "stop sign" : [50, 60]
     }
 
     model_name = "nlpconnect/vit-gpt2-image-captioning"
