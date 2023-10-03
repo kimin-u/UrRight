@@ -4,8 +4,11 @@ from Distance_Measure.distance import *
 from Text_Searching.search import *
 import winsound
 
-from Speech_recognition.demo.test import *
+from speech_recog import * 
+#from Speech_recognition.demo.test import *
+#from Speech_recognition.demo.test import *
 
+###
 class Handler:
     def __init__(self, label_map,distance_label_map, caption_model_name, timegap=15, beepsoundgap = 10, max_length = 16, num_beams = 4):
         #tts setting 
@@ -163,8 +166,9 @@ class Handler:
                 self.img_description_bool =(self.searchtext.search("풍경") or self.searchtext.search("묘사"))
                 self.obj_detection_bool = (self.searchtext.search("객체") or self.searchtext.search("인식"))
                 print(self.img_description_bool, self.obj_detection_bool)
+                result_text = "" 
+                self.searchtext.clear()
             
-            result_text = "" 
             
             #출력 condition
             if (int(time.time())  % self.timegap == 0) or (self.obj_detection_bool == True):
